@@ -4,7 +4,7 @@ table shipments
 	measure 'Orders' = COUNTROWS(shipments)
 		formatString: #,0
 
-	measure 'Delivered Orders' = CALCULATE(COUNTROWS(shipments), shipments[is_delivered] = TRUE())
+	measure 'Delivered Orders' = CALCULATE(COUNTROWS(shipments), shipments[is_delivered] = TRUE()) + 0
 		formatString: #,0
 
 	measure 'OTD Eligible Orders' = CALCULATE(COUNTROWS(shipments), NOT ISBLANK(shipments[is_on_time]))

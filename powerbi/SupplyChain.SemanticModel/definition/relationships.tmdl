@@ -27,9 +27,13 @@ relationship d9f01d00-c185-5d17-b99c-51eadb6dc9f6
 	toColumn: dim_supplier.supplier_key
 
 relationship 54014c81-2a1c-5f9e-a2c9-ade887a43687
+	fromColumn: supplier_ranking.supplier_key
+	toColumn: dim_supplier.supplier_key
+
+relationship 84587ac0-1703-5ac9-90a3-46b4d01850c5
 	fromColumn: inventory_position_current.product_key
 	toColumn: dim_product.product_key
 
-relationship 84587ac0-1703-5ac9-90a3-46b4d01850c5
+relationship ac0cce75-b63c-5d85-a0c4-a0aa0e1ae771
 	fromColumn: inventory_position_current.warehouse_key
 	toColumn: dim_warehouse.warehouse_key

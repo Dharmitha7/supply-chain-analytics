@@ -11,6 +11,7 @@ ref table dim_warehouse
 ref table delivery_by_state
 ref table review_vs_lateness
 ref table supplier_scorecard
+ref table supplier_ranking
 ref table inventory_position_current
 ref table kpi_delivery_monthly
 ref table dq_latest

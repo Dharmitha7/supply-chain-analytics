@@ -10,6 +10,7 @@ table review_vs_lateness
 		dataType: string
 		sourceColumn: bucket
 		summarizeBy: none
+		sortByColumn: sort_order
 
 	column orders
 		dataType: int64

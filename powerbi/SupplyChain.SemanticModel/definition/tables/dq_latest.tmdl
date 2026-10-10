@@ -4,10 +4,10 @@ table dq_latest
 	measure 'DQ Checks' = COUNTROWS(dq_latest)
 		formatString: #,0
 
-	measure 'DQ Critical Failures' = CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = "FAIL")
+	measure 'DQ Critical Failures' = CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = "FAIL") + 0
 		formatString: #,0
 
-	measure 'DQ Warnings' = CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = "WARN")
+	measure 'DQ Warnings' = CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = "WARN") + 0
 		formatString: #,0
 
 	column run_id

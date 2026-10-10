@@ -1,6 +1,6 @@
 -- Supplier scorecard. delivery_* columns are REAL Olist outcomes for orders the seller shipped;
 -- sim_* columns come from the SIMULATED purchase-order layer (replenishment lead times).
-DROP VIEW IF EXISTS marts.supplier_lead_time, marts.supplier_scorecard CASCADE;
+DROP VIEW IF EXISTS marts.supplier_lead_time, marts.supplier_scorecard, marts.supplier_ranking CASCADE;
 
 -- Lead-time statistics over RECEIVED simulated POs (in-transit POs are right-censored and excluded).
 CREATE VIEW marts.supplier_lead_time AS
@@ -43,3 +43,7 @@ ranked AS (   -- only suppliers with >= 5 received POs are ranked: fewer is too 
   FROM base WHERE sim_po_count >= 5)
 SELECT b.*, r.reliability_rank
 FROM base b LEFT JOIN ranked r USING (supplier_key);
+
+-- Only suppliers that have a reliability rank (>= 5 received simulated POs); this is what the Power BI table shows.
+CREATE VIEW marts.supplier_ranking AS
+SELECT * FROM marts.supplier_scorecard WHERE reliability_rank IS NOT NULL;

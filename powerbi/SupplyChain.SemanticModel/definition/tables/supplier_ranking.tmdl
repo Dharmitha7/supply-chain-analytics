@@ -1,0 +1,96 @@
+table supplier_ranking
+	lineageTag: 1faf0aef-e8e0-5357-929b-d7e5f7e11340
+
+	column supplier_key
+		dataType: int64
+		sourceColumn: supplier_key
+		summarizeBy: none
+
+	column seller_id
+		dataType: string
+		sourceColumn: seller_id
+		summarizeBy: none
+
+	column city
+		dataType: string
+		sourceColumn: city
+		summarizeBy: none
+
+	column state
+		dataType: string
+		sourceColumn: state
+		summarizeBy: none
+
+	column order_lines
+		dataType: int64
+		sourceColumn: order_lines
+		summarizeBy: sum
+
+	column orders
+		dataType: int64
+		sourceColumn: orders
+		summarizeBy: sum
+
+	column revenue
+		dataType: double
+		sourceColumn: revenue
+		summarizeBy: sum
+
+	column delivery_eligible_orders
+		dataType: int64
+		sourceColumn: delivery_eligible_orders
+		summarizeBy: sum
+
+	column delivery_otd_pct
+		dataType: double
+		sourceColumn: delivery_otd_pct
+		summarizeBy: sum
+
+	column delivery_avg_days_late
+		dataType: double
+		sourceColumn: delivery_avg_days_late
+		summarizeBy: sum
+
+	column avg_review_score
+		dataType: double
+		sourceColumn: avg_review_score
+		summarizeBy: sum
+
+	column sim_po_count
+		dataType: int64
+		sourceColumn: sim_po_count
+		summarizeBy: sum
+
+	column sim_lead_mean_days
+		dataType: double
+		sourceColumn: sim_lead_mean_days
+		summarizeBy: sum
+
+	column sim_lead_p90_days
+		dataType: double
+		sourceColumn: sim_lead_p90_days
+		summarizeBy: sum
+
+	column sim_lead_stddev_days
+		dataType: double
+		sourceColumn: sim_lead_stddev_days
+		summarizeBy: sum
+
+	column sim_po_on_time_pct
+		dataType: double
+		sourceColumn: sim_po_on_time_pct
+		summarizeBy: sum
+
+	column reliability_rank
+		dataType: int64
+		sourceColumn: reliability_rank
+		summarizeBy: sum
+
+	partition supplier_ranking = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="supplier_ranking"]}[Data]
+			in
+				Data

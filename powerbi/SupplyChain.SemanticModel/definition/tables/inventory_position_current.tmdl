@@ -4,13 +4,13 @@ table inventory_position_current
 	measure 'SKU-DC Series' = COUNTROWS(inventory_position_current)
 		formatString: #,0
 
-	measure 'Stocked Out Now (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[risk_status] = "stockout")
+	measure 'Stocked Out Now (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[risk_status] = "stockout") + 0
 		formatString: #,0
 
-	measure 'At Risk (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_stockout_risk] = TRUE())
+	measure 'At Risk (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_stockout_risk] = TRUE()) + 0
 		formatString: #,0
 
-	measure 'Overstock (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_overstock] = TRUE())
+	measure 'Overstock (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_overstock] = TRUE()) + 0
 		formatString: #,0
 
 	column product_key

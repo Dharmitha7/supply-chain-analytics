@@ -18,7 +18,7 @@ SM = OUT / "SupplyChain.SemanticModel"
 RP = OUT / "SupplyChain.Report"
 
 TABLES = ["shipments", "inventory_snapshot", "dim_date", "dim_product", "dim_supplier", "dim_warehouse",
-          "delivery_by_state", "review_vs_lateness", "supplier_scorecard", "inventory_position_current",
+          "delivery_by_state", "review_vs_lateness", "supplier_scorecard", "supplier_ranking", "inventory_position_current",
           "kpi_delivery_monthly", "dq_latest", "quarantine_summary"]
 
 TYPE = {"integer": "int64", "bigint": "int64", "smallint": "int64", "numeric": "double", "double precision": "double",
@@ -28,7 +28,7 @@ TYPE = {"integer": "int64", "bigint": "int64", "smallint": "int64", "numeric": "
 # ---------------------------------------------------------------- DAX measures: (table, name, expression, format)
 MEASURES = [
     ("shipments", "Orders", "COUNTROWS(shipments)", "#,0"),
-    ("shipments", "Delivered Orders", "CALCULATE(COUNTROWS(shipments), shipments[is_delivered] = TRUE())", "#,0"),
+    ("shipments", "Delivered Orders", "CALCULATE(COUNTROWS(shipments), shipments[is_delivered] = TRUE()) + 0", "#,0"),
     ("shipments", "OTD Eligible Orders", "CALCULATE(COUNTROWS(shipments), NOT ISBLANK(shipments[is_on_time]))", "#,0"),
     ("shipments", "On-time Delivery %",
      "DIVIDE(CALCULATE(COUNTROWS(shipments), shipments[is_on_time] = TRUE()), [OTD Eligible Orders])", "0.0%"),
@@ -50,15 +50,17 @@ MEASURES = [
      "DIVIDE(SUM(inventory_snapshot[cogs]), [Avg Inventory Value (sim)]) * 52 / DISTINCTCOUNT(inventory_snapshot[snapshot_date_key])", "0.00"),
     ("inventory_position_current", "SKU-DC Series", "COUNTROWS(inventory_position_current)", "#,0"),
     ("inventory_position_current", "Stocked Out Now (sim)",
-     "CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[risk_status] = \"stockout\")", "#,0"),
+     "CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[risk_status] = \"stockout\") + 0", "#,0"),
     ("inventory_position_current", "At Risk (sim)",
-     "CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_stockout_risk] = TRUE())", "#,0"),
+     "CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_stockout_risk] = TRUE()) + 0", "#,0"),
     ("inventory_position_current", "Overstock (sim)",
-     "CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_overstock] = TRUE())", "#,0"),
+     "CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_overstock] = TRUE()) + 0", "#,0"),
     ("dq_latest", "DQ Checks", "COUNTROWS(dq_latest)", "#,0"),
-    ("dq_latest", "DQ Critical Failures", "CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = \"FAIL\")", "#,0"),
-    ("dq_latest", "DQ Warnings", "CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = \"WARN\")", "#,0"),
+    ("dq_latest", "DQ Critical Failures", "CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = \"FAIL\") + 0", "#,0"),
+    ("dq_latest", "DQ Warnings", "CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = \"WARN\") + 0", "#,0"),
 ]
+
+SORT_BY = {("review_vs_lateness", "bucket"): "sort_order"}
 
 RELATIONSHIPS = [  # (from table.col [many], to table.col [one])
     ("shipments.purchase_date_key", "dim_date.date_key"),
@@ -68,6 +70,7 @@ RELATIONSHIPS = [  # (from table.col [many], to table.col [one])
     ("inventory_snapshot.warehouse_key", "dim_warehouse.warehouse_key"),
     ("inventory_snapshot.supplier_key", "dim_supplier.supplier_key"),
     ("supplier_scorecard.supplier_key", "dim_supplier.supplier_key"),
+    ("supplier_ranking.supplier_key", "dim_supplier.supplier_key"),
     ("inventory_position_current.product_key", "dim_product.product_key"),
     ("inventory_position_current.warehouse_key", "dim_warehouse.warehouse_key"),
 ]
@@ -107,6 +110,8 @@ def semantic_model() -> None:
             lines += [f"\tcolumn {q(r.column_name)}", f"\t\tdataType: {dt}",
                       f"\t\tsourceColumn: {r.column_name}",
                       f"\t\tsummarizeBy: {'none' if dt in ('string', 'boolean', 'dateTime') or r.column_name.endswith('_key') else 'sum'}"]
+            if (t, r.column_name) in SORT_BY:
+                lines.append(f"		sortByColumn: {SORT_BY[(t, r.column_name)]}")
             if dt == "dateTime":
                 lines.append("\t\tformatString: yyyy-mm-dd")
             lines.append("")
@@ -155,8 +160,8 @@ def A(t, c, fn, label):
     return proj(agg(t, c, fn), f"{label}({t}.{c})")
 
 
-def visual(vtype, title, x, y, wd, ht, roles, z=0):
-    return {
+def visual(vtype, title, x, y, wd, ht, roles, z=0, sort=None):
+    v = {
         "$schema": f"{SCHEMA}/visualContainer/1.0.0/schema.json", "name": uuid.uuid4().hex[:20],
         "position": {"x": x, "y": y, "z": z, "width": wd, "height": ht},
         "visual": {"visualType": vtype,
@@ -164,6 +169,9 @@ def visual(vtype, title, x, y, wd, ht, roles, z=0):
                    "visualContainerObjects": {"title": [{"properties": {
                        "text": {"expr": {"Literal": {"Value": f"'{title}'"}}}}}]},
                    "drillFilterOtherVisuals": True}}
+    if sort:   # (field, "Ascending" | "Descending")
+        v["visual"]["query"]["sortDefinition"] = {"sort": [{"field": sort[0], "direction": sort[1]}], "isDefaultSort": True}
+    return v
 
 
 def card(title, t, m, x, y):
@@ -193,18 +201,20 @@ PAGES = {
         card("Carrier handoff days", "shipments", "Avg Carrier Handoff Days", 746, 20),
         card("Cancel rate", "shipments", "Cancel Rate", 988, 20),
         visual("clusteredBarChart", "On-time % by customer state (lowest first)", 20, 150, 620, 540,
-               {"Category": [C("delivery_by_state", "state")], "Y": [A("delivery_by_state", "otd_pct", 1, "Avg")]}),
+               {"Category": [C("delivery_by_state", "state")], "Y": [A("delivery_by_state", "otd_pct", 1, "Avg")]},
+               sort=(agg("delivery_by_state", "otd_pct", 1), "Ascending")),
         visual("clusteredColumnChart", "Review score vs lateness", 660, 150, 600, 260,
                {"Category": [C("review_vs_lateness", "bucket")], "Y": [A("review_vs_lateness", "avg_review_score", 1, "Avg")]}),
         visual("lineChart", "Avg cycle days by month", 660, 430, 600, 260,
                {"Category": [C("dim_date", "year_month")], "Y": [M("shipments", "Avg Cycle Days")]}),
     ],
     "Supplier Scorecard": [
-        visual("tableEx", "Supplier ranking (delivery = real; sim_* = simulated lead times)", 20, 20, 1240, 360,
-               {"Values": [C("supplier_scorecard", "reliability_rank"), C("supplier_scorecard", "seller_id"),
-                           C("supplier_scorecard", "orders"), C("supplier_scorecard", "delivery_otd_pct"),
-                           C("supplier_scorecard", "sim_lead_mean_days"), C("supplier_scorecard", "sim_lead_p90_days"),
-                           C("supplier_scorecard", "sim_lead_stddev_days"), C("supplier_scorecard", "sim_po_on_time_pct")]}),
+        visual("tableEx", "Supplier ranking, best first (delivery = real; sim_* = simulated lead times)", 20, 20, 1240, 360,
+               {"Values": [C("supplier_ranking", "reliability_rank"), C("supplier_ranking", "seller_id"),
+                           C("supplier_ranking", "orders"), C("supplier_ranking", "delivery_otd_pct"),
+                           C("supplier_ranking", "sim_lead_mean_days"), C("supplier_ranking", "sim_lead_p90_days"),
+                           C("supplier_ranking", "sim_lead_stddev_days"), C("supplier_ranking", "sim_po_on_time_pct")]},
+               sort=(col("supplier_ranking", "reliability_rank"), "Ascending")),
         visual("scatterChart", "Lead-time variability vs mean lead time (simulated)", 20, 400, 700, 300,
                {"Category": [C("supplier_scorecard", "seller_id")],
                 "X": [A("supplier_scorecard", "sim_lead_mean_days", 1, "Avg")],
