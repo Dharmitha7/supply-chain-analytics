@@ -14,5 +14,39 @@ services:
       interval: 5s
       retries: 10
 
+  # Scheduler UI + API at http://localhost:4200
+  prefect-server:
+    image: prefecthq/prefect:3-latest
+    command: prefect server start --host 0.0.0.0
+    ports:
+      - "4200:4200"
+    environment:
+      PREFECT_API_DATABASE_CONNECTION_URL: sqlite+aiosqlite:////data/prefect.db
+    volumes:
+      - prefectdata:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4200/api/health')"]
+      interval: 10s
+      retries: 12
+
+  # Runs the daily_refresh flow on a 06:00 cron (container timezone is UTC)
+  prefect-worker:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prefect-server:
+        condition: service_healthy
+    environment:
+      PREFECT_API_URL: http://prefect-server:4200/api
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./data:/app/data:ro
+
 volumes:
   pgdata:
+  prefectdata:
