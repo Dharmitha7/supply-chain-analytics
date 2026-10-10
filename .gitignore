@@ -7,3 +7,4 @@ data/raw/
 *.pbix.bak
 .prefect/
 kaggle.json
+*.egg-info/
