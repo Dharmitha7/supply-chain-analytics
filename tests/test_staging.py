@@ -55,7 +55,7 @@ def test_no_orphans_in_staging(staged, engine):
 
 def test_one_review_per_order_and_latest_kept(staged, engine):
     assert scalar(engine, "SELECT count(*) - count(DISTINCT order_id) FROM staging.order_reviews") == 0
-    assert scalar(engine, "SELECT count(*) FROM staging.order_reviews WHERE review_id LIKE 'old\_%'") == 0
+    assert scalar(engine, "SELECT count(*) FROM staging.order_reviews WHERE review_id LIKE 'old%'") == 0
 
 
 def test_geolocation_collapsed_to_one_row_per_zip(staged, engine):

@@ -165,7 +165,7 @@ def build(outdir: Path) -> dict[str, pd.DataFrame]:
         for c in df.columns:
             if pd.api.types.is_datetime64_any_dtype(df[c]):
                 df[c] = _ts(df[c])
-        df.to_csv(outdir / f"{name}.csv", index=False)
+        df.to_csv(outdir / f"{name}.csv", index=False, lineterminator="\n")
     return tables
 
 
