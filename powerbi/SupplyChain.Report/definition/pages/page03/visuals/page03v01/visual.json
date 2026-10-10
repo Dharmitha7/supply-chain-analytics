@@ -1,0 +1,150 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.0.0/schema.json",
+  "name": "page03v01",
+  "position": {
+    "x": 20,
+    "y": 20,
+    "z": 0,
+    "width": 1240,
+    "height": 360
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "reliability_rank"
+                }
+              },
+              "queryRef": "supplier_scorecard.reliability_rank",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "seller_id"
+                }
+              },
+              "queryRef": "supplier_scorecard.seller_id",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "orders"
+                }
+              },
+              "queryRef": "supplier_scorecard.orders",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "delivery_otd_pct"
+                }
+              },
+              "queryRef": "supplier_scorecard.delivery_otd_pct",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "sim_lead_mean_days"
+                }
+              },
+              "queryRef": "supplier_scorecard.sim_lead_mean_days",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "sim_lead_p90_days"
+                }
+              },
+              "queryRef": "supplier_scorecard.sim_lead_p90_days",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "sim_lead_stddev_days"
+                }
+              },
+              "queryRef": "supplier_scorecard.sim_lead_stddev_days",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "sim_po_on_time_pct"
+                }
+              },
+              "queryRef": "supplier_scorecard.sim_po_on_time_pct",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Supplier ranking (delivery = real; sim_* = simulated lead times)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

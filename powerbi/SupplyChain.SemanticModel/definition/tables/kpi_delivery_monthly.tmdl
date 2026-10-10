@@ -1,0 +1,92 @@
+table kpi_delivery_monthly
+	lineageTag: d877cbe8-cc09-5b8a-abc9-dd0b8ed35703
+
+	column month_start
+		dataType: dateTime
+		sourceColumn: month_start
+		summarizeBy: none
+		formatString: yyyy-mm-dd
+
+	column year_month
+		dataType: string
+		sourceColumn: year_month
+		summarizeBy: none
+
+	column orders
+		dataType: int64
+		sourceColumn: orders
+		summarizeBy: sum
+
+	column canceled_orders
+		dataType: int64
+		sourceColumn: canceled_orders
+		summarizeBy: sum
+
+	column non_canceled_orders
+		dataType: int64
+		sourceColumn: non_canceled_orders
+		summarizeBy: sum
+
+	column delivered_orders
+		dataType: int64
+		sourceColumn: delivered_orders
+		summarizeBy: sum
+
+	column otd_eligible_orders
+		dataType: int64
+		sourceColumn: otd_eligible_orders
+		summarizeBy: sum
+
+	column on_time_orders
+		dataType: int64
+		sourceColumn: on_time_orders
+		summarizeBy: sum
+
+	column otd_pct
+		dataType: double
+		sourceColumn: otd_pct
+		summarizeBy: sum
+
+	column avg_days_late
+		dataType: double
+		sourceColumn: avg_days_late
+		summarizeBy: sum
+
+	column avg_days_late_when_late
+		dataType: double
+		sourceColumn: avg_days_late_when_late
+		summarizeBy: sum
+
+	column avg_cycle_days
+		dataType: double
+		sourceColumn: avg_cycle_days
+		summarizeBy: sum
+
+	column avg_carrier_handoff_days
+		dataType: double
+		sourceColumn: avg_carrier_handoff_days
+		summarizeBy: sum
+
+	column fulfillment_rate_pct
+		dataType: double
+		sourceColumn: fulfillment_rate_pct
+		summarizeBy: sum
+
+	column cancel_rate_pct
+		dataType: double
+		sourceColumn: cancel_rate_pct
+		summarizeBy: sum
+
+	column avg_review_score
+		dataType: double
+		sourceColumn: avg_review_score
+		summarizeBy: sum
+
+	partition kpi_delivery_monthly = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="kpi_delivery_monthly"]}[Data]
+			in
+				Data

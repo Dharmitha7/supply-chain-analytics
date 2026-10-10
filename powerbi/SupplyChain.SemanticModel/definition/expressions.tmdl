@@ -1,0 +1,5 @@
+expression Server = "localhost:5432" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 5b820e62-8651-5b31-94ab-791340eb7f6a
+
+expression Database = "supply_chain" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 4c2785d5-17c9-501e-8d00-6ef22c2b965b

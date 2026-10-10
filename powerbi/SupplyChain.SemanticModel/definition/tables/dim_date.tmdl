@@ -1,0 +1,68 @@
+table dim_date
+	lineageTag: ca0da952-0667-5f4c-8d4a-868d016c1cd8
+
+	column date_key
+		dataType: int64
+		sourceColumn: date_key
+		summarizeBy: none
+
+	column date
+		dataType: dateTime
+		sourceColumn: date
+		summarizeBy: none
+		formatString: yyyy-mm-dd
+
+	column year
+		dataType: int64
+		sourceColumn: year
+		summarizeBy: sum
+
+	column quarter
+		dataType: int64
+		sourceColumn: quarter
+		summarizeBy: sum
+
+	column month
+		dataType: int64
+		sourceColumn: month
+		summarizeBy: sum
+
+	column month_name
+		dataType: string
+		sourceColumn: month_name
+		summarizeBy: none
+
+	column year_month
+		dataType: string
+		sourceColumn: year_month
+		summarizeBy: none
+
+	column week_start
+		dataType: dateTime
+		sourceColumn: week_start
+		summarizeBy: none
+		formatString: yyyy-mm-dd
+
+	column iso_week
+		dataType: int64
+		sourceColumn: iso_week
+		summarizeBy: sum
+
+	column day_of_week
+		dataType: int64
+		sourceColumn: day_of_week
+		summarizeBy: sum
+
+	column is_weekend
+		dataType: boolean
+		sourceColumn: is_weekend
+		summarizeBy: none
+
+	partition dim_date = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="dim_date"]}[Data]
+			in
+				Data

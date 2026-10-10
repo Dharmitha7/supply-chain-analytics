@@ -1,0 +1,149 @@
+table inventory_position_current
+	lineageTag: edfa685a-1e7f-5ab3-8176-0794f01b6a69
+
+	measure 'SKU-DC Series' = COUNTROWS(inventory_position_current)
+		formatString: #,0
+
+	measure 'Stocked Out Now (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[risk_status] = "stockout")
+		formatString: #,0
+
+	measure 'At Risk (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_stockout_risk] = TRUE())
+		formatString: #,0
+
+	measure 'Overstock (sim)' = CALCULATE(COUNTROWS(inventory_position_current), inventory_position_current[is_overstock] = TRUE())
+		formatString: #,0
+
+	column product_key
+		dataType: int64
+		sourceColumn: product_key
+		summarizeBy: none
+
+	column warehouse_key
+		dataType: int64
+		sourceColumn: warehouse_key
+		summarizeBy: none
+
+	column supplier_key
+		dataType: int64
+		sourceColumn: supplier_key
+		summarizeBy: none
+
+	column snapshot_date
+		dataType: dateTime
+		sourceColumn: snapshot_date
+		summarizeBy: none
+		formatString: yyyy-mm-dd
+
+	column on_hand
+		dataType: int64
+		sourceColumn: on_hand
+		summarizeBy: sum
+
+	column on_order
+		dataType: int64
+		sourceColumn: on_order
+		summarizeBy: sum
+
+	column reorder_point
+		dataType: int64
+		sourceColumn: reorder_point
+		summarizeBy: sum
+
+	column safety_stock
+		dataType: int64
+		sourceColumn: safety_stock
+		summarizeBy: sum
+
+	column unit_cost
+		dataType: double
+		sourceColumn: unit_cost
+		summarizeBy: sum
+
+	column inventory_value
+		dataType: double
+		sourceColumn: inventory_value
+		summarizeBy: sum
+
+	column demand_13w
+		dataType: int64
+		sourceColumn: demand_13w
+		summarizeBy: sum
+
+	column avg_weekly_demand
+		dataType: double
+		sourceColumn: avg_weekly_demand
+		summarizeBy: sum
+
+	column days_of_supply
+		dataType: double
+		sourceColumn: days_of_supply
+		summarizeBy: sum
+
+	column supplier_lead_p90_days
+		dataType: double
+		sourceColumn: supplier_lead_p90_days
+		summarizeBy: sum
+
+	column cogs_52w
+		dataType: double
+		sourceColumn: cogs_52w
+		summarizeBy: sum
+
+	column avg_inventory_value_52w
+		dataType: double
+		sourceColumn: avg_inventory_value_52w
+		summarizeBy: sum
+
+	column inventory_turnover_52w
+		dataType: double
+		sourceColumn: inventory_turnover_52w
+		summarizeBy: sum
+
+	column weeks_observed
+		dataType: int64
+		sourceColumn: weeks_observed
+		summarizeBy: sum
+
+	column stockout_weeks
+		dataType: int64
+		sourceColumn: stockout_weeks
+		summarizeBy: sum
+
+	column stockout_week_pct
+		dataType: double
+		sourceColumn: stockout_week_pct
+		summarizeBy: sum
+
+	column fill_rate_pct
+		dataType: double
+		sourceColumn: fill_rate_pct
+		summarizeBy: sum
+
+	column is_stockout_now
+		dataType: boolean
+		sourceColumn: is_stockout_now
+		summarizeBy: none
+
+	column is_stockout_risk
+		dataType: boolean
+		sourceColumn: is_stockout_risk
+		summarizeBy: none
+
+	column is_overstock
+		dataType: boolean
+		sourceColumn: is_overstock
+		summarizeBy: none
+
+	column risk_status
+		dataType: string
+		sourceColumn: risk_status
+		summarizeBy: none
+
+	partition inventory_position_current = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="inventory_position_current"]}[Data]
+			in
+				Data

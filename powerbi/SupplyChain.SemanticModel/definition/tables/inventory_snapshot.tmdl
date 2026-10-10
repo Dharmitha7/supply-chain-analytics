@@ -1,0 +1,93 @@
+table inventory_snapshot
+	lineageTag: c6298f53-8ee3-5b36-8348-5eafa9e4e870
+
+	measure 'Stockout Rate (sim)' = DIVIDE(CALCULATE(COUNTROWS(inventory_snapshot), inventory_snapshot[is_stockout] = TRUE()), COUNTROWS(inventory_snapshot))
+		formatString: 0.0%
+
+	measure 'Fill Rate (sim)' = DIVIDE(SUM(inventory_snapshot[units_sold]), SUM(inventory_snapshot[units_demand]))
+		formatString: 0.0%
+
+	measure 'Avg Inventory Value (sim)' = DIVIDE(SUM(inventory_snapshot[inventory_value]), DISTINCTCOUNT(inventory_snapshot[snapshot_date_key]))
+		formatString: #,0
+
+	measure 'Inventory Turnover (sim, annualized)' = DIVIDE(SUM(inventory_snapshot[cogs]), [Avg Inventory Value (sim)]) * 52 / DISTINCTCOUNT(inventory_snapshot[snapshot_date_key])
+		formatString: 0.00
+
+	column snapshot_date_key
+		dataType: int64
+		sourceColumn: snapshot_date_key
+		summarizeBy: none
+
+	column product_key
+		dataType: int64
+		sourceColumn: product_key
+		summarizeBy: none
+
+	column warehouse_key
+		dataType: int64
+		sourceColumn: warehouse_key
+		summarizeBy: none
+
+	column supplier_key
+		dataType: int64
+		sourceColumn: supplier_key
+		summarizeBy: none
+
+	column on_hand
+		dataType: int64
+		sourceColumn: on_hand
+		summarizeBy: sum
+
+	column on_order
+		dataType: int64
+		sourceColumn: on_order
+		summarizeBy: sum
+
+	column reorder_point
+		dataType: int64
+		sourceColumn: reorder_point
+		summarizeBy: sum
+
+	column safety_stock
+		dataType: int64
+		sourceColumn: safety_stock
+		summarizeBy: sum
+
+	column units_demand
+		dataType: int64
+		sourceColumn: units_demand
+		summarizeBy: sum
+
+	column units_sold
+		dataType: int64
+		sourceColumn: units_sold
+		summarizeBy: sum
+
+	column unit_cost
+		dataType: double
+		sourceColumn: unit_cost
+		summarizeBy: sum
+
+	column inventory_value
+		dataType: double
+		sourceColumn: inventory_value
+		summarizeBy: sum
+
+	column cogs
+		dataType: double
+		sourceColumn: cogs
+		summarizeBy: sum
+
+	column is_stockout
+		dataType: boolean
+		sourceColumn: is_stockout
+		summarizeBy: none
+
+	partition inventory_snapshot = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="inventory_snapshot"]}[Data]
+			in
+				Data

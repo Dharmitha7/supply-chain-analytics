@@ -1,0 +1,26 @@
+table quarantine_summary
+	lineageTag: 4203acfd-48e5-55e4-99b4-867b68ed0b5c
+
+	column source_table
+		dataType: string
+		sourceColumn: source_table
+		summarizeBy: none
+
+	column reason_code
+		dataType: string
+		sourceColumn: reason_code
+		summarizeBy: none
+
+	column rows_quarantined
+		dataType: int64
+		sourceColumn: rows_quarantined
+		summarizeBy: sum
+
+	partition quarantine_summary = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="quarantine_summary"]}[Data]
+			in
+				Data

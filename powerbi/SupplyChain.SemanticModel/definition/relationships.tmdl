@@ -1,0 +1,35 @@
+relationship 1cc0aedf-ff01-5ae1-91cf-7617df8dd096
+	fromColumn: shipments.purchase_date_key
+	toColumn: dim_date.date_key
+
+relationship 79af3ef3-69d5-5b25-976d-b6f36424c9d0
+	fromColumn: shipments.warehouse_key
+	toColumn: dim_warehouse.warehouse_key
+
+relationship e7ae8e51-0a43-5c51-9181-ff788d164b32
+	fromColumn: inventory_snapshot.snapshot_date_key
+	toColumn: dim_date.date_key
+
+relationship ea96fd1f-81ce-53e8-a9b3-641bc6c6c44f
+	fromColumn: inventory_snapshot.product_key
+	toColumn: dim_product.product_key
+
+relationship c65ba101-9b10-5c2f-9958-5a372e17cebc
+	fromColumn: inventory_snapshot.warehouse_key
+	toColumn: dim_warehouse.warehouse_key
+
+relationship 3f94826c-314b-5eb1-bcc3-aceb026227e5
+	fromColumn: inventory_snapshot.supplier_key
+	toColumn: dim_supplier.supplier_key
+
+relationship d9f01d00-c185-5d17-b99c-51eadb6dc9f6
+	fromColumn: supplier_scorecard.supplier_key
+	toColumn: dim_supplier.supplier_key
+
+relationship 54014c81-2a1c-5f9e-a2c9-ade887a43687
+	fromColumn: inventory_position_current.product_key
+	toColumn: dim_product.product_key
+
+relationship 84587ac0-1703-5ac9-90a3-46b4d01850c5
+	fromColumn: inventory_position_current.warehouse_key
+	toColumn: dim_warehouse.warehouse_key

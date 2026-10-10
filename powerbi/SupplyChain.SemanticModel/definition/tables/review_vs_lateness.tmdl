@@ -1,0 +1,31 @@
+table review_vs_lateness
+	lineageTag: 4993eaca-c0cb-5db6-aaab-a8a4d2ca44b8
+
+	column sort_order
+		dataType: int64
+		sourceColumn: sort_order
+		summarizeBy: sum
+
+	column bucket
+		dataType: string
+		sourceColumn: bucket
+		summarizeBy: none
+
+	column orders
+		dataType: int64
+		sourceColumn: orders
+		summarizeBy: sum
+
+	column avg_review_score
+		dataType: double
+		sourceColumn: avg_review_score
+		summarizeBy: sum
+
+	partition review_vs_lateness = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="review_vs_lateness"]}[Data]
+			in
+				Data

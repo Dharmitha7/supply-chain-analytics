@@ -1,0 +1,41 @@
+table dim_warehouse
+	lineageTag: 8ecf207a-e965-58e1-855f-821b42ceb552
+
+	column warehouse_key
+		dataType: int64
+		sourceColumn: warehouse_key
+		summarizeBy: none
+
+	column warehouse_code
+		dataType: string
+		sourceColumn: warehouse_code
+		summarizeBy: none
+
+	column warehouse_name
+		dataType: string
+		sourceColumn: warehouse_name
+		summarizeBy: none
+
+	column city
+		dataType: string
+		sourceColumn: city
+		summarizeBy: none
+
+	column region
+		dataType: string
+		sourceColumn: region
+		summarizeBy: none
+
+	column is_simulated
+		dataType: boolean
+		sourceColumn: is_simulated
+		summarizeBy: none
+
+	partition dim_warehouse = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="dim_warehouse"]}[Data]
+			in
+				Data

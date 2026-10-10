@@ -1,0 +1,108 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.0.0/schema.json",
+  "name": "page04v09",
+  "position": {
+    "x": 440,
+    "y": 440,
+    "z": 0,
+    "width": 820,
+    "height": 250
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_latest"
+                    }
+                  },
+                  "Property": "status"
+                }
+              },
+              "queryRef": "dq_latest.status",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_latest"
+                    }
+                  },
+                  "Property": "layer"
+                }
+              },
+              "queryRef": "dq_latest.layer",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_latest"
+                    }
+                  },
+                  "Property": "check_id"
+                }
+              },
+              "queryRef": "dq_latest.check_id",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_latest"
+                    }
+                  },
+                  "Property": "value"
+                }
+              },
+              "queryRef": "dq_latest.value",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_latest"
+                    }
+                  },
+                  "Property": "threshold"
+                }
+              },
+              "queryRef": "dq_latest.threshold",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Data-quality checks - latest run'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

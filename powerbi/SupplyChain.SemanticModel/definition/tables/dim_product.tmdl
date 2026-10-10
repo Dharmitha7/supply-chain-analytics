@@ -1,0 +1,41 @@
+table dim_product
+	lineageTag: 5a4bf0a0-53f9-5038-a595-f2e531f5cc09
+
+	column product_key
+		dataType: int64
+		sourceColumn: product_key
+		summarizeBy: none
+
+	column product_id
+		dataType: string
+		sourceColumn: product_id
+		summarizeBy: none
+
+	column category_pt
+		dataType: string
+		sourceColumn: category_pt
+		summarizeBy: none
+
+	column category_en
+		dataType: string
+		sourceColumn: category_en
+		summarizeBy: none
+
+	column weight_g
+		dataType: double
+		sourceColumn: weight_g
+		summarizeBy: sum
+
+	column volume_cm3
+		dataType: double
+		sourceColumn: volume_cm3
+		summarizeBy: sum
+
+	partition dim_product = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="dim_product"]}[Data]
+			in
+				Data

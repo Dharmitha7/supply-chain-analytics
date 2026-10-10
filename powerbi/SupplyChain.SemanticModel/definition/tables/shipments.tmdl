@@ -1,0 +1,121 @@
+table shipments
+	lineageTag: 217f8426-103a-5f87-92f5-c65a29b57ada
+
+	measure 'Orders' = COUNTROWS(shipments)
+		formatString: #,0
+
+	measure 'Delivered Orders' = CALCULATE(COUNTROWS(shipments), shipments[is_delivered] = TRUE())
+		formatString: #,0
+
+	measure 'OTD Eligible Orders' = CALCULATE(COUNTROWS(shipments), NOT ISBLANK(shipments[is_on_time]))
+		formatString: #,0
+
+	measure 'On-time Delivery %' = DIVIDE(CALCULATE(COUNTROWS(shipments), shipments[is_on_time] = TRUE()), [OTD Eligible Orders])
+		formatString: 0.0%
+
+	measure 'Avg Days Late' = AVERAGE(shipments[days_late])
+		formatString: 0.00
+
+	measure 'Avg Cycle Days' = CALCULATE(AVERAGE(shipments[cycle_days]), shipments[is_delivered] = TRUE())
+		formatString: 0.0
+
+	measure 'Avg Carrier Handoff Days' = AVERAGE(shipments[carrier_handoff_days])
+		formatString: 0.00
+
+	measure 'Fulfillment Rate' = DIVIDE([Delivered Orders], CALCULATE(COUNTROWS(shipments), shipments[is_canceled] = FALSE()))
+		formatString: 0.0%
+
+	measure 'Cancel Rate' = DIVIDE(CALCULATE(COUNTROWS(shipments), shipments[is_canceled] = TRUE()), [Orders])
+		formatString: 0.0%
+
+	measure 'Avg Review Score' = AVERAGE(shipments[review_score])
+		formatString: 0.00
+
+	column order_id
+		dataType: string
+		sourceColumn: order_id
+		summarizeBy: none
+
+	column purchase_date_key
+		dataType: int64
+		sourceColumn: purchase_date_key
+		summarizeBy: none
+
+	column customer_state
+		dataType: string
+		sourceColumn: customer_state
+		summarizeBy: none
+
+	column warehouse_key
+		dataType: int64
+		sourceColumn: warehouse_key
+		summarizeBy: none
+
+	column order_status
+		dataType: string
+		sourceColumn: order_status
+		summarizeBy: none
+
+	column is_delivered
+		dataType: boolean
+		sourceColumn: is_delivered
+		summarizeBy: none
+
+	column is_canceled
+		dataType: boolean
+		sourceColumn: is_canceled
+		summarizeBy: none
+
+	column is_on_time
+		dataType: boolean
+		sourceColumn: is_on_time
+		summarizeBy: none
+
+	column days_late
+		dataType: int64
+		sourceColumn: days_late
+		summarizeBy: sum
+
+	column days_vs_estimate
+		dataType: int64
+		sourceColumn: days_vs_estimate
+		summarizeBy: sum
+
+	column cycle_days
+		dataType: double
+		sourceColumn: cycle_days
+		summarizeBy: sum
+
+	column carrier_handoff_days
+		dataType: double
+		sourceColumn: carrier_handoff_days
+		summarizeBy: sum
+
+	column ship_lead_days
+		dataType: double
+		sourceColumn: ship_lead_days
+		summarizeBy: sum
+
+	column review_score
+		dataType: int64
+		sourceColumn: review_score
+		summarizeBy: sum
+
+	column n_items
+		dataType: int64
+		sourceColumn: n_items
+		summarizeBy: sum
+
+	column order_value
+		dataType: double
+		sourceColumn: order_value
+		summarizeBy: sum
+
+	partition shipments = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="shipments"]}[Data]
+			in
+				Data

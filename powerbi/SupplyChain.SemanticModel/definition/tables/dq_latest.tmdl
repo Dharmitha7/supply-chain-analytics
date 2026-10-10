@@ -1,0 +1,81 @@
+table dq_latest
+	lineageTag: a338973a-469f-566a-87b2-c69ff35e6f26
+
+	measure 'DQ Checks' = COUNTROWS(dq_latest)
+		formatString: #,0
+
+	measure 'DQ Critical Failures' = CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = "FAIL")
+		formatString: #,0
+
+	measure 'DQ Warnings' = CALCULATE(COUNTROWS(dq_latest), dq_latest[status] = "WARN")
+		formatString: #,0
+
+	column run_id
+		dataType: string
+		sourceColumn: run_id
+		summarizeBy: none
+
+	column checked_at
+		dataType: dateTime
+		sourceColumn: checked_at
+		summarizeBy: none
+		formatString: yyyy-mm-dd
+
+	column layer
+		dataType: string
+		sourceColumn: layer
+		summarizeBy: none
+
+	column check_id
+		dataType: string
+		sourceColumn: check_id
+		summarizeBy: none
+
+	column table_name
+		dataType: string
+		sourceColumn: table_name
+		summarizeBy: none
+
+	column check_type
+		dataType: string
+		sourceColumn: check_type
+		summarizeBy: none
+
+	column severity
+		dataType: string
+		sourceColumn: severity
+		summarizeBy: none
+
+	column value
+		dataType: double
+		sourceColumn: value
+		summarizeBy: sum
+
+	column threshold
+		dataType: double
+		sourceColumn: threshold
+		summarizeBy: sum
+
+	column passed
+		dataType: boolean
+		sourceColumn: passed
+		summarizeBy: none
+
+	column error
+		dataType: string
+		sourceColumn: error
+		summarizeBy: none
+
+	column status
+		dataType: string
+		sourceColumn: status
+		summarizeBy: none
+
+	partition dq_latest = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="dq_latest"]}[Data]
+			in
+				Data

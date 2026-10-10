@@ -1,0 +1,118 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.0.0/schema.json",
+  "name": "page03v02",
+  "position": {
+    "x": 20,
+    "y": 400,
+    "z": 0,
+    "width": 700,
+    "height": 300
+  },
+  "visual": {
+    "visualType": "scatterChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "supplier_scorecard"
+                    }
+                  },
+                  "Property": "seller_id"
+                }
+              },
+              "queryRef": "supplier_scorecard.seller_id",
+              "active": true
+            }
+          ]
+        },
+        "X": {
+          "projections": [
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "supplier_scorecard"
+                        }
+                      },
+                      "Property": "sim_lead_mean_days"
+                    }
+                  },
+                  "Function": 1
+                }
+              },
+              "queryRef": "Avg(supplier_scorecard.sim_lead_mean_days)"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "supplier_scorecard"
+                        }
+                      },
+                      "Property": "sim_lead_stddev_days"
+                    }
+                  },
+                  "Function": 1
+                }
+              },
+              "queryRef": "Avg(supplier_scorecard.sim_lead_stddev_days)"
+            }
+          ]
+        },
+        "Size": {
+          "projections": [
+            {
+              "field": {
+                "Aggregation": {
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "supplier_scorecard"
+                        }
+                      },
+                      "Property": "orders"
+                    }
+                  },
+                  "Function": 0
+                }
+              },
+              "queryRef": "Sum(supplier_scorecard.orders)"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Lead-time variability vs mean lead time (simulated)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

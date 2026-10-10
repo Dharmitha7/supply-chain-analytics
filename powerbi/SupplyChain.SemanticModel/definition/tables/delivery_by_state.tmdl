@@ -1,0 +1,61 @@
+table delivery_by_state
+	lineageTag: bff852fb-522a-526b-b9d0-abd370d185f6
+
+	column state
+		dataType: string
+		sourceColumn: state
+		summarizeBy: none
+
+	column orders
+		dataType: int64
+		sourceColumn: orders
+		summarizeBy: sum
+
+	column otd_eligible_orders
+		dataType: int64
+		sourceColumn: otd_eligible_orders
+		summarizeBy: sum
+
+	column otd_pct
+		dataType: double
+		sourceColumn: otd_pct
+		summarizeBy: sum
+
+	column avg_days_late
+		dataType: double
+		sourceColumn: avg_days_late
+		summarizeBy: sum
+
+	column avg_cycle_days
+		dataType: double
+		sourceColumn: avg_cycle_days
+		summarizeBy: sum
+
+	column avg_carrier_handoff_days
+		dataType: double
+		sourceColumn: avg_carrier_handoff_days
+		summarizeBy: sum
+
+	column avg_review_score
+		dataType: double
+		sourceColumn: avg_review_score
+		summarizeBy: sum
+
+	column lat
+		dataType: double
+		sourceColumn: lat
+		summarizeBy: sum
+
+	column lng
+		dataType: double
+		sourceColumn: lng
+		summarizeBy: sum
+
+	partition delivery_by_state = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="delivery_by_state"]}[Data]
+			in
+				Data

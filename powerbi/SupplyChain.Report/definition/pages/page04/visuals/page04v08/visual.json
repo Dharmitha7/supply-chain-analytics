@@ -1,0 +1,122 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.0.0/schema.json",
+  "name": "page04v08",
+  "position": {
+    "x": 440,
+    "y": 150,
+    "z": 0,
+    "width": 820,
+    "height": 270
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "inventory_position_current"
+                    }
+                  },
+                  "Property": "risk_status"
+                }
+              },
+              "queryRef": "inventory_position_current.risk_status",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "inventory_position_current"
+                    }
+                  },
+                  "Property": "on_hand"
+                }
+              },
+              "queryRef": "inventory_position_current.on_hand",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "inventory_position_current"
+                    }
+                  },
+                  "Property": "days_of_supply"
+                }
+              },
+              "queryRef": "inventory_position_current.days_of_supply",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "inventory_position_current"
+                    }
+                  },
+                  "Property": "supplier_lead_p90_days"
+                }
+              },
+              "queryRef": "inventory_position_current.supplier_lead_p90_days",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "inventory_position_current"
+                    }
+                  },
+                  "Property": "inventory_turnover_52w"
+                }
+              },
+              "queryRef": "inventory_position_current.inventory_turnover_52w",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "inventory_position_current"
+                    }
+                  },
+                  "Property": "stockout_week_pct"
+                }
+              },
+              "queryRef": "inventory_position_current.stockout_week_pct",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Inventory positions - filter with the slicer (simulated)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

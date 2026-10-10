@@ -1,0 +1,41 @@
+table dim_supplier
+	lineageTag: 86a20dc6-64e2-593d-a936-28144e70b85c
+
+	column supplier_key
+		dataType: int64
+		sourceColumn: supplier_key
+		summarizeBy: none
+
+	column seller_id
+		dataType: string
+		sourceColumn: seller_id
+		summarizeBy: none
+
+	column city
+		dataType: string
+		sourceColumn: city
+		summarizeBy: none
+
+	column state
+		dataType: string
+		sourceColumn: state
+		summarizeBy: none
+
+	column lat
+		dataType: double
+		sourceColumn: lat
+		summarizeBy: sum
+
+	column lng
+		dataType: double
+		sourceColumn: lng
+		summarizeBy: sum
+
+	partition dim_supplier = m
+		mode: import
+		source =
+			let
+				Source = PostgreSQL.Database(Server, Database),
+				Data = Source{[Schema="marts",Item="dim_supplier"]}[Data]
+			in
+				Data

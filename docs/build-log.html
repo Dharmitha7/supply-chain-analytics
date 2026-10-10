@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build log - Supply Chain Analytics</title>
+<style>
+  :root { --bg:#f9f9f7; --card:#fcfcfb; --ink:#0b0b0b; --muted:#52514e; --line:#e1e0d9; --accent:#2a78d6; --code:#f0efec; --warn:#b35c00; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0d0d0d; --card:#1a1a19; --ink:#fff; --muted:#c3c2b7; --line:#2c2c2a; --accent:#6da7ec; --code:#262624; --warn:#fab219; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; } .sub { color: var(--muted); margin: 0 0 20px; }
+  .bar { position: sticky; top: 0; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--line); display:flex; gap:8px; flex-wrap:wrap; z-index:2; }
+  input[type=search] { flex:1 1 220px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); font:inherit; }
+  button { padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); font:inherit; cursor:pointer; }
+  details { background:var(--card); border:1px solid var(--line); border-radius:8px; margin:12px 0; }
+  summary { cursor:pointer; padding:12px 14px; font-weight:600; }
+  summary .tag { font-weight:400; color:var(--muted); font-size:.85rem; margin-left:6px; }
+  .body { padding: 0 16px 14px; }
+  h3 { font-size:.95rem; margin:14px 0 4px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  pre { background:var(--code); padding:10px 12px; border-radius:6px; overflow-x:auto; font:13px/1.45 Consolas, monospace; margin:6px 0; }
+  code { background:var(--code); padding:1px 5px; border-radius:4px; font:13px Consolas, monospace; }
+  .learn { border-left:3px solid var(--accent); padding:4px 12px; margin:10px 0; color:var(--ink); }
+  .dev { border-left:3px solid var(--warn); padding:4px 12px; margin:10px 0; }
+  ul { padding-left: 20px; } li { margin: 3px 0; }
+  .hide { display:none; }
+  table { border-collapse: collapse; width:100%; font-size:.92rem; } td, th { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Build log</h1>
+  <p class="sub">Supply Chain &amp; Inventory Performance Analytics - commands, decisions, and what each step teaches. Blue = concept worth learning; orange = a deviation from the original plan.</p>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Filter (e.g. quarantine, Prefect, percentile)..." aria-label="Filter phases">
+    <button id="open">Expand all</button><button id="close">Collapse all</button>
+  </div>
+
+  <details data-phase open><summary>Phase 0-1 - Setup, Docker Postgres, raw ingest <span class="tag">done before this session</span></summary><div class="body">
+    <h3>Commands</h3>
+<pre>docker compose up -d postgres
+python -m venv .venv &amp;&amp; pip install -e ".[dev]"
+python -m sca.ingest            # CSV -> raw.* as TEXT, row counts to dq.run_log</pre>
+    <div class="learn"><b>Raw = untouched.</b> Every column is <code>TEXT</code> so loading can never fail on a bad value. Typing and cleaning happen in the next layer, where failures are visible and logged.</div>
+    <ul><li>Bulk load uses Postgres <code>COPY</code> (about 1M geolocation rows in seconds).</li><li>Ingest drops and recreates each raw table, so it is idempotent.</li></ul>
+  </div></details>
+
+  <details data-phase><summary>Phase 2 - Staging SQL, quarantine, cleaning tests <span class="tag">sql/10_staging</span></summary><div class="body">
+    <h3>Decisions</h3>
+    <ul>
+      <li>Each table is classified once into a temp table with a <code>reason</code> column; staging takes <code>reason IS NULL</code>, quarantine takes the rest. They cannot disagree.</li>
+      <li><b>Hard-invalid</b> (quarantine): duplicate key, delivered before purchase, canceled with delivery date, price &le; 0, freight &lt; 0, orphans.</li>
+      <li><b>Soft anomalies</b> (flag, keep): approved before purchase, carrier pickup after delivery, delivered with no date.</li>
+      <li>Geolocation (1M rows) is <i>aggregated</i> to one row per zip prefix, not rejected, and logged.</li>
+    </ul>
+    <div class="learn"><b>Reconciliation:</b> <code>raw = staged + quarantined</code> per table. On real data: 99,441 orders - 6 quarantined = 99,435; 99,224 reviews - 6 orphans - 551 superseded = 98,667.</div>
+    <div class="learn"><b>Why a synthetic sample?</b> Olist cannot be redistributed, so CI uses <code>sca.make_sample</code>: seeded fake data with a known number of injected defects. Tests assert the exact quarantine counts, proving every rule fires.</div>
+    <div class="dev"><b>Gotcha:</b> a shell heredoc with quotes broke twice; I switched to writing files directly. Also a literal <code>%</code> in SQL (even in comments) is treated as a placeholder by psycopg - the SQL runner now escapes it.</div>
+  </div></details>
+
+  <details data-phase><summary>Phase 3 - Core star schema <span class="tag">sql/20_core_dims, 30_core_facts</span></summary><div class="body">
+    <ul><li>Dimensions: date, product, supplier (= seller), customer, warehouse. Deterministic integer surrogate keys; enforced foreign keys.</li>
+    <li><code>fact_order_line</code> (1 row per item) and <code>fact_shipment</code> (1 row per order, with derived <code>days_late</code>, <code>is_on_time</code>, cycle and handoff times).</li></ul>
+    <div class="learn"><b>On-time rule:</b> compare <i>dates</i>, not timestamps. Olist estimates are midnight-only, so a 10 am delivery on the estimated day would otherwise count as late.</div>
+    <div class="learn"><b>Sanity check against the world:</b> real-data on-time 93.2% and 12.6-day cycle time match published Olist analyses.</div>
+  </div></details>
+
+  <details data-phase><summary>Phase 4 - Simulation layer <span class="tag">src/sca/simulate.py</span></summary><div class="body">
+    <ul>
+      <li>Demand = real weekly units per product x DC. Policy = weekly-review (s, S). Lead times ~ lognormal per supplier; 15% of suppliers deliberately unreliable.</li>
+      <li>The policy <i>plans with the quoted lead time</i> but reality follows the actual distribution, so stockouts emerge instead of being injected.</li>
+    </ul>
+    <div class="learn"><b>Lognormal lead times</b> are right-skewed: most deliveries near the median, a long tail of very late ones - which is why p90 matters more than the mean for safety stock.</div>
+    <div class="dev"><b>Deviation:</b> original order was ingest -> sim -> staging. Simulation needs real sales, which only exist after the core order facts, so it runs after core.</div>
+    <div class="dev"><b>Tuning:</b> first pass made even "reliable" suppliers 61% on-time (median = quoted). Centred reliable suppliers at 75-95% of quoted: 85% on-time vs 23% for unreliable.</div>
+    <div class="dev"><b>Data problem found:</b> Olist's last weeks (Sep-Oct 2018) are nearly empty, so "trailing 13 weeks" showed no demand. The simulation now keeps only weeks with &ge;20% of median volume.</div>
+  </div></details>
+
+  <details data-phase><summary>Phase 5 - Data-quality framework <span class="tag">sql/90_dq, src/sca/dq.py</span></summary><div class="body">
+    <ul><li>Checks are rows in <code>dq.check</code> (id, layer, severity, SQL returning one number, threshold). Pass if <code>value &lt;= threshold</code>.</li>
+    <li>A check whose SQL errors counts as a failure. Results append to <code>dq.result</code> under a run id; critical failure raises <code>DQFailure</code>.</li></ul>
+    <h3>Break-it-on-purpose tests (each rolled back)</h3>
+    <ul><li>duplicate key, null key, orphan FK, negative price, deleted quarantine rows, lost fact rows, bad KPI value, dropped table</li></ul>
+    <div class="learn">Postgres DDL is transactional, so a test can drop a constraint, corrupt data, run the check, and <code>ROLLBACK</code> - leaving no trace.</div>
+  </div></details>
+
+  <details data-phase><summary>Phase 6 - Marts / KPI views <span class="tag">sql/40_marts</span></summary><div class="body">
+    <ul><li>Delivery KPIs by month/state, review vs lateness, supplier scorecard, inventory position, executive monthly, plus pass-through model views for Power BI.</li>
+    <li>Turnover = trailing-52-week COGS / average inventory value. Days of supply = on hand / trailing-13-week daily demand. At risk = days of supply &lt; supplier p90 lead.</li></ul>
+    <div class="learn"><b>Independent verification:</b> tests recompute on-time %, lead-time mean/p90/stddev, turnover and days of supply in pandas and compare to the SQL. Two implementations agreeing is stronger than one implementation passing.</div>
+    <div class="learn"><b>Real finding:</b> average review 4.29 on time, 2.10 when 4-7 days late.</div>
+    <div class="dev"><b>Bug caught by tests:</b> risk flags were NULL (not FALSE) when days of supply was undefined; fixed with COALESCE.</div>
+  </div></details>
+
+  <details data-phase><summary>Phase 7 - Prefect flow, schedule, CI <span class="tag">flows/, Dockerfile, ci.yml</span></summary><div class="body">
+<pre>python flows/pipeline.py [folder]        # run once
+docker compose up -d --build             # server (UI :4200) + worker serving cron 0 6 * * *
+docker compose exec prefect-worker prefect deployment run 'daily_refresh/daily-refresh-0600' --watch</pre>
+    <ul><li>Each DQ gate is a task; critical failure raises and fails the flow, leaving the previous marts intact.</li>
+    <li>CI: Postgres service container, <code>pytest</code>, then the flow on <code>data/sample</code>.</li>
+    <li>Verified: flow green on real data in 2.5 min; a Docker-scheduled run completed; deployment shows cron <code>0 6 * * *</code>.</li></ul>
+    <div class="learn"><b>Why Prefect over Airflow:</b> one small container versus several services and ~4 GB RAM; same "scheduled DAG" story.</div>
+    <div class="learn"><b>Safety:</b> because every layer rebuilds, never point the flow at the sample while connected to your real database - the tests use a separate <code>_test</code> database for this reason.</div>
+  </div></details>
+
+  <details data-phase><summary>Phase 8 - Power BI project <span class="tag">powerbi/build_pbip.py</span></summary><div class="body">
+    <ul><li>A script generates the TMDL semantic model (13 tables, 9 relationships, 20 DAX measures) and a 4-page PBIR report from the live catalog, plus a theme from the validated palette.</li>
+    <li>Measures on simulated data carry a <b>(sim)</b> suffix; visual titles say "simulated".</li></ul>
+    <div class="dev"><b>Not verified:</b> Power BI Desktop could not be opened in this environment, so the files are unvalidated and there are no screenshots or PDF yet. Open the .pbip, fix anything Desktop flags, then export.</div>
+  </div></details>
+
+  <details data-phase><summary>Phase 9 - Docs and recommendations <span class="tag">README, docs/</span></summary><div class="body">
+    <ul><li><code>python -m sca.recommend</code> writes recommendations from the marts: weak states, worst sellers, DC rebalancing, reorder-point changes.</li>
+    <li>Reorder-point impact is a counterfactual: same demand and lead-time draws replayed under a p90-based policy (400 series: fill rate 88.2% -> 90.4% for +8.8% inventory value; simulated).</li>
+    <li><code>python -m sca.docs</code> generates the data dictionary from the database catalog so it cannot drift.</li></ul>
+    <div class="dev"><b>Honest correction:</b> the first draft of the rebalancing section ranked by units and made a tiny opportunity look big; it now reports value and states the opportunity is small (~5K BRL, 120 units).</div>
+  </div></details>
+
+  <details data-phase><summary>Plan items not done / need you</summary><div class="body">
+    <table>
+      <tr><th>Item</th><th>Status</th></tr>
+      <tr><td>GitHub repo + push</td><td>No remote and <code>gh</code> not installed. Create the repo, then <code>git remote add origin ...; git push -u origin main</code>.</td></tr>
+      <tr><td>CI run on GitHub</td><td>Workflow written; unproven until pushed.</td></tr>
+      <tr><td>Power BI validation, screenshots, PDF</td><td>Needs Desktop (see Phase 8).</td></tr>
+      <tr><td>Fresh-clone test</td><td>Not run.</td></tr>
+      <tr><td>Architecture PNG for README</td><td>Mermaid only (renders on GitHub).</td></tr>
+    </table>
+  </div></details>
+</main>
+<script>
+  const q = document.getElementById('q'), ds = [...document.querySelectorAll('details[data-phase]')];
+  q.addEventListener('input', () => {
+    const t = q.value.trim().toLowerCase();
+    ds.forEach(d => { const hit = !t || d.textContent.toLowerCase().includes(t); d.classList.toggle('hide', !hit); if (t && hit) d.open = true; });
+  });
+  document.getElementById('open').onclick = () => ds.forEach(d => d.open = true);
+  document.getElementById('close').onclick = () => ds.forEach(d => d.open = false);
+</script>
+</body>
+</html>
