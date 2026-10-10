@@ -59,10 +59,13 @@ def test_every_sim_row_is_flagged_simulated(simulated, engine):
 
 
 def test_simulated_demand_equals_real_sales(simulated, engine):
+    """Within the simulated week range and product set, demand is exactly the real order-line count."""
     sim = scalar(engine, "SELECT sum(units_demand) FROM core.fact_inventory_snapshot")
-    real = scalar(engine, """SELECT count(*) FROM core.fact_order_line f
-                             WHERE order_status NOT IN ('canceled','unavailable')
-                             AND product_key IN (SELECT DISTINCT product_key FROM core.fact_inventory_snapshot)""")
+    real = scalar(engine, """SELECT count(*) FROM core.fact_order_line f JOIN core.dim_date d ON d.date_key = f.purchase_date_key
+                             WHERE f.order_status NOT IN ('canceled','unavailable')
+                             AND d.week_start BETWEEN (SELECT min(d2.date) FROM core.fact_inventory_snapshot i JOIN core.dim_date d2 ON d2.date_key = i.snapshot_date_key)
+                                                  AND (SELECT max(d2.date) FROM core.fact_inventory_snapshot i JOIN core.dim_date d2 ON d2.date_key = i.snapshot_date_key)
+                             AND f.product_key IN (SELECT DISTINCT product_key FROM core.fact_inventory_snapshot)""")
     assert sim == real
 
 

@@ -87,9 +87,9 @@ def _execute(conn: Connection, layers: list[str], run_id: str) -> list[CheckResu
 
 def load_checks_in(conn: Connection) -> None:
     from .config import SQL_DIR
-    conn.exec_driver_sql((SQL_DIR / "00_schemas.sql").read_text(encoding="utf-8"))   # idempotent; ensures dq tables exist
+    conn.exec_driver_sql(db.read_sql(SQL_DIR / "00_schemas.sql"))   # idempotent; ensures dq tables exist
     for f in sorted((SQL_DIR / "90_dq").glob("*.sql")):
-        conn.exec_driver_sql(f.read_text(encoding="utf-8"))
+        conn.exec_driver_sql(db.read_sql(f))
 
 
 def summarize(results: list[CheckResult]) -> str:

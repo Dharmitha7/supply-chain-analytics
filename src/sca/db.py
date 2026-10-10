@@ -12,9 +12,14 @@ def engine() -> Engine:
     return create_engine(db_url(), future=True)
 
 
+def read_sql(path: Path) -> str:
+    """SQL text with % escaped so the driver does not treat it as a placeholder."""
+    return path.read_text(encoding="utf-8").replace("%", "%%")
+
+
 def run_sql_file(path: Path) -> None:
     with engine().begin() as conn:
-        conn.exec_driver_sql(path.read_text(encoding="utf-8"))
+        conn.exec_driver_sql(read_sql(path))
 
 
 def run_sql_dir(subdir: str) -> list[str]:

@@ -51,10 +51,11 @@ def scalar(engine, sql: str):
 
 @pytest.fixture(scope="session")
 def built(staged):
-    """Full pipeline through the simulated core facts, on the sample data."""
+    """Full pipeline through marts, on the sample data."""
     from sca import db, simulate
     db.run_sql_dir("20_core_dims")
     db.run_sql_dir("30_core_facts")
     simulate.run()
     db.run_sql_dir("35_core_sim_facts")
+    db.run_sql_dir("40_marts")
     return True

@@ -21,7 +21,8 @@ TOP_N_PRODUCTS = 500
 Z_SERVICE = 1.28            # ~90% cycle service level used to set safety stock
 COVER_WEEKS = 4             # order-up-to level S = s + 4 weeks of average demand
 UNRELIABLE_SHARE = 0.15     # share of suppliers deliberately unreliable
-COST_RATIO = 0.60           # unit cost proxy = 60% of average selling price
+MIN_WEEK_VOLUME_SHARE = 0.20  # a week is "active" if its order lines >= 20% of the median week
+COST_RATIO = 0.60          # unit cost proxy = 60% of average selling price
 
 
 @dataclass
@@ -90,6 +91,12 @@ def build(seed: int = SEED, top_n: int = TOP_N_PRODUCTS) -> dict[str, pd.DataFra
         WHERE f.order_status NOT IN ('canceled', 'unavailable')"""), eng, parse_dates=["week_start"])
     if lines.empty:
         raise RuntimeError("core.fact_order_line is empty; run the core SQL before simulate")
+
+    # Olist's first and last weeks are nearly empty (ramp-up / data cut-off). Simulating them would make
+    # "current" inventory look like zero demand, so keep only the contiguous range of active weeks.
+    weekly = lines.groupby("week_start").size()
+    active = weekly[weekly >= MIN_WEEK_VOLUME_SHARE * weekly.median()].index
+    lines = lines[(lines.week_start >= active.min()) & (lines.week_start <= active.max())]
 
     top = lines.groupby("product_key").size().nlargest(top_n).index
     lines = lines[lines.product_key.isin(top)]
