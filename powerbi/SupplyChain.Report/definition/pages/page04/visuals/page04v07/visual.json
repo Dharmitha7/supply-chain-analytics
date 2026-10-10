@@ -39,7 +39,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Risk status'"
+                  "Value": "'Filter positions by risk status'"
                 }
               }
             }

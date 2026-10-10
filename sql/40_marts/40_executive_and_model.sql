@@ -44,8 +44,10 @@ SELECT source_table, reason_code, count(*) AS rows_quarantined
 FROM staging.quarantine GROUP BY source_table, reason_code;
 
 CREATE VIEW marts.dq_latest AS
-SELECT r.run_id, r.checked_at, r.layer, r.check_id, r.table_name, r.check_type, r.severity,
+SELECT r.run_id, r.checked_at, r.layer, r.check_id, c.description, r.table_name, r.check_type, r.severity,
        r.value, r.threshold, r.passed, r.error,
-       CASE WHEN r.passed THEN 'PASS' WHEN r.severity = 'critical' THEN 'FAIL' ELSE 'WARN' END AS status
+       CASE WHEN r.passed THEN 'PASS' WHEN r.severity = 'critical' THEN 'FAIL' ELSE 'WARN' END AS status,
+       CASE WHEN r.passed THEN 3 WHEN r.severity = 'critical' THEN 1 ELSE 2 END AS status_order   -- FAIL, WARN, PASS
 FROM dq.result r
+LEFT JOIN dq.check c USING (check_id)
 WHERE r.run_id = (SELECT run_id FROM dq.result ORDER BY checked_at DESC, result_id DESC LIMIT 1);

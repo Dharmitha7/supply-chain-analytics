@@ -6,7 +6,7 @@
     "y": 400,
     "z": 0,
     "width": 520,
-    "height": 300
+    "height": 90
   },
   "visual": {
     "visualType": "slicer",
@@ -39,7 +39,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'State'"
+                  "Value": "'Supplier state'"
                 }
               }
             }
@@ -47,6 +47,21 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "data": [
+        {
+          "properties": {
+            "mode": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Dropdown'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }

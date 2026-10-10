@@ -64,6 +64,20 @@
                       "Entity": "dq_latest"
                     }
                   },
+                  "Property": "description"
+                }
+              },
+              "queryRef": "dq_latest.description",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_latest"
+                    }
+                  },
                   "Property": "value"
                 }
               },
@@ -86,6 +100,24 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dq_latest"
+                  }
+                },
+                "Property": "status_order"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
       }
     },
     "visualContainerObjects": {
@@ -95,7 +127,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Data-quality checks - latest run'"
+                  "Value": "'Data-quality checks, latest run (failures and warnings first)'"
                 }
               }
             }

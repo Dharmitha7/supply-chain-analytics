@@ -160,7 +160,7 @@ def A(t, c, fn, label):
     return proj(agg(t, c, fn), f"{label}({t}.{c})")
 
 
-def visual(vtype, title, x, y, wd, ht, roles, z=0, sort=None):
+def visual(vtype, title, x, y, wd, ht, roles, z=0, sort=None, labels=False, dropdown=False):
     v = {
         "$schema": f"{SCHEMA}/visualContainer/1.0.0/schema.json", "name": uuid.uuid4().hex[:20],
         "position": {"x": x, "y": y, "z": z, "width": wd, "height": ht},
@@ -171,6 +171,17 @@ def visual(vtype, title, x, y, wd, ht, roles, z=0, sort=None):
                    "drillFilterOtherVisuals": True}}
     if sort:   # (field, "Ascending" | "Descending")
         v["visual"]["query"]["sortDefinition"] = {"sort": [{"field": sort[0], "direction": sort[1]}], "isDefaultSort": True}
+    objs = {}
+    if vtype in ("lineChart", "clusteredBarChart", "clusteredColumnChart"):   # titles already name the measure
+        off = [{"properties": {"showAxisTitle": {"expr": {"Literal": {"Value": "false"}}}}}]
+        objs["categoryAxis"] = off
+        objs["valueAxis"] = off
+    if labels:
+        objs["labels"] = [{"properties": {"show": {"expr": {"Literal": {"Value": "true"}}}}}]
+    if dropdown:
+        objs["data"] = [{"properties": {"mode": {"expr": {"Literal": {"Value": "'Dropdown'"}}}}}]
+    if objs:
+        v["visual"]["objects"] = objs
     return v
 
 
@@ -202,9 +213,9 @@ PAGES = {
         card("Cancel rate", "shipments", "Cancel Rate", 988, 20),
         visual("clusteredBarChart", "On-time % by customer state (lowest first)", 20, 150, 620, 540,
                {"Category": [C("delivery_by_state", "state")], "Y": [A("delivery_by_state", "otd_pct", 1, "Avg")]},
-               sort=(agg("delivery_by_state", "otd_pct", 1), "Ascending")),
+               sort=(agg("delivery_by_state", "otd_pct", 1), "Ascending"), labels=True),
         visual("clusteredColumnChart", "Review score vs lateness", 660, 150, 600, 260,
-               {"Category": [C("review_vs_lateness", "bucket")], "Y": [A("review_vs_lateness", "avg_review_score", 1, "Avg")]}),
+               {"Category": [C("review_vs_lateness", "bucket")], "Y": [A("review_vs_lateness", "avg_review_score", 1, "Avg")]}, labels=True),
         visual("lineChart", "Avg cycle days by month", 660, 430, 600, 260,
                {"Category": [C("dim_date", "year_month")], "Y": [M("shipments", "Avg Cycle Days")]}),
     ],
@@ -215,12 +226,12 @@ PAGES = {
                            C("supplier_ranking", "sim_lead_mean_days"), C("supplier_ranking", "sim_lead_p90_days"),
                            C("supplier_ranking", "sim_lead_stddev_days"), C("supplier_ranking", "sim_po_on_time_pct")]},
                sort=(col("supplier_ranking", "reliability_rank"), "Ascending")),
-        visual("scatterChart", "Lead-time variability vs mean lead time (simulated)", 20, 400, 700, 300,
+        visual("scatterChart", "Lead-time variability (y, std dev days) vs mean lead time (x, days), bubble = orders (simulated)", 20, 400, 700, 300,
                {"Category": [C("supplier_scorecard", "seller_id")],
                 "X": [A("supplier_scorecard", "sim_lead_mean_days", 1, "Avg")],
                 "Y": [A("supplier_scorecard", "sim_lead_stddev_days", 1, "Avg")],
                 "Size": [A("supplier_scorecard", "orders", 0, "Sum")]}),
-        visual("slicer", "State", 740, 400, 520, 300, {"Values": [C("dim_supplier", "state")]}),
+        visual("slicer", "Supplier state", 740, 400, 520, 90, {"Values": [C("dim_supplier", "state")]}, dropdown=True),
     ],
     "Inventory Risk & DQ": [
         card("Stocked out now (simulated)", "inventory_position_current", "Stocked Out Now (sim)", 20, 20),
@@ -230,17 +241,21 @@ PAGES = {
         card("DQ warnings", "dq_latest", "DQ Warnings", 988, 20),
         visual("clusteredColumnChart", "SKU-DC series by risk status (simulated)", 20, 150, 400, 270,
                {"Category": [C("inventory_position_current", "risk_status")],
-                "Y": [M("inventory_position_current", "SKU-DC Series")]}),
-        visual("slicer", "Risk status", 20, 440, 400, 250, {"Values": [C("inventory_position_current", "risk_status")]}),
-        visual("tableEx", "Inventory positions - filter with the slicer (simulated)", 440, 150, 820, 270,
-               {"Values": [C("inventory_position_current", "risk_status"), C("inventory_position_current", "on_hand"),
+                "Y": [M("inventory_position_current", "SKU-DC Series")]},
+               sort=(meas("inventory_position_current", "SKU-DC Series"), "Descending"), labels=True),
+        visual("slicer", "Filter positions by risk status", 20, 440, 400, 250, {"Values": [C("inventory_position_current", "risk_status")]}),
+        visual("tableEx", "Inventory positions, most stockout weeks first (simulated)", 440, 150, 820, 270,
+               {"Values": [C("dim_product", "category_en"), C("dim_warehouse", "warehouse_code"),
+                           C("inventory_position_current", "risk_status"), C("inventory_position_current", "on_hand"),
                            C("inventory_position_current", "days_of_supply"),
                            C("inventory_position_current", "supplier_lead_p90_days"),
                            C("inventory_position_current", "inventory_turnover_52w"),
-                           C("inventory_position_current", "stockout_week_pct")]}),
-        visual("tableEx", "Data-quality checks - latest run", 440, 440, 820, 250,
+                           C("inventory_position_current", "stockout_week_pct")]},
+               sort=(col("inventory_position_current", "stockout_week_pct"), "Descending")),
+        visual("tableEx", "Data-quality checks, latest run (failures and warnings first)", 440, 440, 820, 250,
                {"Values": [C("dq_latest", "status"), C("dq_latest", "layer"), C("dq_latest", "check_id"),
-                           C("dq_latest", "value"), C("dq_latest", "threshold")]}),
+                           C("dq_latest", "description"), C("dq_latest", "value"), C("dq_latest", "threshold")]},
+               sort=(col("dq_latest", "status_order"), "Ascending")),
     ],
 }
 

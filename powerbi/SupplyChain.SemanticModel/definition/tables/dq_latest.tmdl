@@ -31,6 +31,11 @@ table dq_latest
 		sourceColumn: check_id
 		summarizeBy: none
 
+	column description
+		dataType: string
+		sourceColumn: description
+		summarizeBy: none
+
 	column table_name
 		dataType: string
 		sourceColumn: table_name
@@ -70,6 +75,11 @@ table dq_latest
 		dataType: string
 		sourceColumn: status
 		summarizeBy: none
+
+	column status_order
+		dataType: int64
+		sourceColumn: status_order
+		summarizeBy: sum
 
 	partition dq_latest = m
 		mode: import

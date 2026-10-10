@@ -19,6 +19,34 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
+                      "Entity": "dim_product"
+                    }
+                  },
+                  "Property": "category_en"
+                }
+              },
+              "queryRef": "dim_product.category_en",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_warehouse"
+                    }
+                  },
+                  "Property": "warehouse_code"
+                }
+              },
+              "queryRef": "dim_warehouse.warehouse_code",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
                       "Entity": "inventory_position_current"
                     }
                   },
@@ -100,6 +128,24 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "inventory_position_current"
+                  }
+                },
+                "Property": "stockout_week_pct"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
       }
     },
     "visualContainerObjects": {
@@ -109,7 +155,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Inventory positions - filter with the slicer (simulated)'"
+                  "Value": "'Inventory positions, most stockout weeks first (simulated)'"
                 }
               }
             }

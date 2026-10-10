@@ -105,7 +105,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Lead-time variability vs mean lead time (simulated)'"
+                  "Value": "'Lead-time variability (y, std dev days) vs mean lead time (x, days), bubble = orders (simulated)'"
                 }
               }
             }
