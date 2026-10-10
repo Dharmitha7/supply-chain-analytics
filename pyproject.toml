@@ -1,0 +1,23 @@
+[project]
+name = "sca"
+version = "0.1.0"
+description = "Supply chain & inventory analytics pipeline (Olist + simulated inventory)"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+    "prefect>=3.0",
+    "kaggle>=1.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

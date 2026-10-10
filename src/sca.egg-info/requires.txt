@@ -1,0 +1,10 @@
+pandas>=2.2
+numpy>=1.26
+sqlalchemy>=2.0
+psycopg[binary]>=3.2
+python-dotenv>=1.0
+prefect>=3.0
+kaggle>=1.6
+
+[dev]
+pytest>=8

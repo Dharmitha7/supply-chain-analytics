@@ -1,0 +1,10 @@
+pyproject.toml
+src/sca/__init__.py
+src/sca/config.py
+src/sca/db.py
+src/sca/ingest.py
+src/sca.egg-info/PKG-INFO
+src/sca.egg-info/SOURCES.txt
+src/sca.egg-info/dependency_links.txt
+src/sca.egg-info/requires.txt
+src/sca.egg-info/top_level.txt
