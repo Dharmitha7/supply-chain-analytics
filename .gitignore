@@ -8,3 +8,7 @@ data/raw/
 .prefect/
 kaggle.json
 *.egg-info/
+
+# Power BI local cache and user settings
+**/.pbi/
+*.abf
