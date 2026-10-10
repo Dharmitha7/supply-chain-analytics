@@ -267,9 +267,15 @@ def report() -> None:
         "version": "4.0", "datasetReference": {"byPath": {"path": "../SupplyChain.SemanticModel"}}}, indent=2))
     d = RP / "definition"
     w(d / "version.json", json.dumps({"$schema": f"{SCHEMA}/versionMetadata/1.0.0/schema.json", "version": "2.0.0"}, indent=2))
-    w(d / "report.json", json.dumps({"$schema": f"{SCHEMA}/report/2.0.0/schema.json",
-                                     "themeCollection": {"baseTheme": {"name": "CY24SU10", "reportVersionAtImport": "5.61",
-                                                                       "type": "SharedResources"}}}, indent=2))
+    w(d / "report.json", json.dumps({
+        "$schema": f"{SCHEMA}/report/2.0.0/schema.json",
+        "themeCollection": {
+            "baseTheme": {"name": "CY24SU10", "reportVersionAtImport": "5.61", "type": "SharedResources"},
+            "customTheme": {"name": "SupplyChain.json", "reportVersionAtImport": "5.61", "type": "RegisteredResources"}},
+        "resourcePackages": [{"name": "RegisteredResources", "type": "RegisteredResources", "items": [
+            {"name": "SupplyChain.json", "path": "SupplyChain.json", "type": "CustomTheme"}]}]}, indent=2))
+    # the theme file lives inside the report so it is applied on open (no manual Browse for themes)
+    w(RP / "StaticResources" / "RegisteredResources" / "SupplyChain.json", (OUT / "theme.json").read_text(encoding="utf-8"))
     ids = []
     for i, (name, visuals) in enumerate(PAGES.items()):
         pid = f"page{i + 1:02d}"
@@ -298,6 +304,6 @@ def theme() -> None:
 
 if __name__ == "__main__":
     semantic_model()
-    report()
     theme()
+    report()
     print(f"wrote Power BI project to {OUT}")

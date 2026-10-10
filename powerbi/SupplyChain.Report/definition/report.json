@@ -5,6 +5,24 @@
       "name": "CY24SU10",
       "reportVersionAtImport": "5.61",
       "type": "SharedResources"
+    },
+    "customTheme": {
+      "name": "SupplyChain.json",
+      "reportVersionAtImport": "5.61",
+      "type": "RegisteredResources"
     }
-  }
+  },
+  "resourcePackages": [
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "SupplyChain.json",
+          "path": "SupplyChain.json",
+          "type": "CustomTheme"
+        }
+      ]
+    }
+  ]
 }
